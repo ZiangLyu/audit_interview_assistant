@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审计访谈助手 - Audit Interview Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-user-tie"></i> 审计访谈助手</h1>
+            <p class="subtitle">智能化访谈记录整理工具</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2><i class="fas fa-edit"></i> 访谈信息输入</h2>
+                
+                <div class="prompt-template">
+                    <h3>提示词模板</h3>
+                    <div class="template-inputs">
+                        <div class="input-group">
+                            <label for="auditType">审计类型:</label>
+                            <input type="text" id="auditType" placeholder="例如：财务审计、内部控制审计">
+                        </div>
+                        <div class="input-group">
+                            <label for="companyName">被审计单位:</label>
+                            <input type="text" id="companyName" placeholder="例如：XX科技有限公司">
+                        </div>
+                        <div class="input-group">
+                            <label for="intervieweePosition">被访谈人岗位:</label>
+                            <input type="text" id="intervieweePosition" placeholder="例如：财务部经理">
+                        </div>
+                        <div class="input-group">
+                            <label for="intervieweeName">被访谈人姓名:</label>
+                            <input type="text" id="intervieweeName" placeholder="例如：张三">
+                        </div>
+                    </div>
+                    <div class="generated-prompt">
+                        <h4>生成的提示词:</h4>
+                        <p id="generatedPrompt">假如你是一名资深的审计人员，你在开展<span class="placeholder" id="auditTypePreview">[审计类型]</span>审计，被审计单位是<span class="placeholder" id="companyNamePreview">[被审计单位]</span>，被访谈人：<span class="placeholder" id="companyNamePreview2">[被审计单位]</span><span class="placeholder" id="intervieweePositionPreview">[被访谈人岗位]</span><span class="placeholder" id="intervieweeNamePreview">[被访谈人姓名]</span>。请你根据以下访谈内容进行整理访谈会议纪要，并以Markdown形式输出整理后的访谈记录、审计疑点以及审计资料清单。</p>
+                    </div>
+                </div>
+
+                <div class="custom-prompt-section">
+                    <div class="form-group">
+                        <label for="useCustomPrompt">
+                            <input type="checkbox" id="useCustomPrompt"> 使用自定义提示词
+                        </label>
+                        <textarea id="customPrompt" placeholder="在此输入自定义提示词..." disabled></textarea>
+                    </div>
+                </div>
+
+                <div class="transcription-section">
+                    <h3><i class="fas fa-microphone"></i> 访谈内容录入</h3>
+                    <div class="input-method-tabs">
+                        <button type="button" class="method-tab active" data-method="manual">手动输入</button>
+                        <button type="button" class="method-tab" data-method="upload">上传Word文档</button>
+                    </div>
+                    
+                    <div id="manualInput" class="input-method-content active">
+                        <div class="form-group">
+                            <label for="transcript">请输入访谈记录（支持从Word文档复制粘贴）</label>
+                            <textarea id="transcript" placeholder="在此粘贴或输入访谈内容..." rows="10"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div id="fileUpload" class="input-method-content">
+                        <div class="form-group">
+                            <label for="wordFile">选择Word文档（支持.docx和.doc格式）</label>
+                            <div class="file-upload-area">
+                                <input type="file" id="wordFile" accept=".docx,.doc" style="display: none;">
+                                <div class="upload-placeholder" id="uploadPlaceholder">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    <p>点击选择文件或拖拽文件到此处</p>
+                                    <p class="file-info">支持 .docx 和 .doc 格式</p>
+                                </div>
+                                <div class="file-info-display" id="fileInfoDisplay" style="display: none;">
+                                    <div class="file-details">
+                                        <span class="filename" id="selectedFilename"></span>
+                                        <button type="button" class="remove-file" id="removeFile">×</button>
+                                    </div>
+                                    <div class="file-content-preview" id="fileContentPreview"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="submitBtn" class="primary-btn">
+                        <i class="fas fa-cogs"></i> 生成访谈纪要
+                    </button>
+                    <button id="resetBtn" class="secondary-btn">
+                        <i class="fas fa-eraser"></i> 清空内容
+                    </button>
+                </div>
+            </section>
+
+            <section class="output-section" id="resultSection" style="display: none;">
+                <h2><i class="fas fa-file-alt"></i> 生成结果</h2>
+                <div class="output-tabs">
+                    <button class="tab-btn active" data-tab="minutes">会议纪要</button>
+                    <button class="tab-btn" data-tab="issues">审计疑点</button>
+                    <button class="tab-btn" data-tab="materials">资料清单</button>
+                    <button class="tab-btn" data-tab="raw">原始输出</button>
+                </div>
+                
+                <div class="output-content">
+                    <div id="minutesTab" class="tab-content active">
+                        <div id="meetingMinutes" class="markdown-preview"></div>
+                    </div>
+                    <div id="issuesTab" class="tab-content">
+                        <div class="content-box">
+                            <ol id="auditIssues"></ol>
+                        </div>
+                    </div>
+                    <div id="materialsTab" class="tab-content">
+                        <div class="content-box">
+                            <ol id="requiredMaterials"></ol>
+                        </div>
+                    </div>
+                    <div id="rawTab" class="tab-content">
+                        <div class="content-box">
+                            <pre id="rawResponse"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="download-buttons">
+                    <button id="exportBtn" class="download-btn">
+                        <i class="fas fa-file-word"></i> 下载Word文档
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <div id="loadingModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="spinner"></div>
+                <p>正在处理中，请稍候...</p>
+            </div>
+        </div>
+
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
